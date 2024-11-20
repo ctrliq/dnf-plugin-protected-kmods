@@ -35,23 +35,70 @@ kmod_names = kmod-idpf-irdma
 
 ## Blocking kernel updates
 
-* **EL8** or **EL9**
-  Kernel updates will be blocked in the absence of the availability of a compatible kmod package for that kernel.
+**EL8** or **EL9**
+Kernel updates will be blocked in the absence of the availability of a compatible kmod package for that kernel.
 
-  The `kernel` and `kernel-core` packages will be removed from such `dnf` transactions and an error message will be printed, ex:
+The `kernel` and `kernel-core` packages will be removed from such `dnf` transactions and an error message will be printed, ex:
 
-  > kmod-idpf-irdma: filtering kernel 5.14.0-503.14.1.el9_5, no precompiled modules available
+> kmod-idpf-irdma: filtering kernel 5.14.0-503.14.1.el9_5, no precompiled modules available
 
 
 ### Debugging
 
 * **EL8** or **EL9**
-  Heuristic information can be printed via CLI, such as installed kernel, installed kmod packages, available kernels, available drivers, and available kmod packages.
+Heuristic information can be printed via CLI, such as installed kernel, installed kmod packages, available kernels, available drivers, and available kmod packages.
 
-  ```shell
-  dnf kmod-kernel-plugin
-  ```
+```shell
+dnf kmod-kernel-plugin
+```
 
+Example output:
+```
+Installed kernel(s):
+  kernel-core-5.14.0-427.35.1.el9_4.cloud.1.0.x86_64
+
+Available kernel(s):
+  kernel-core-5.14.0-503.14.1.el9_5.x86_64
+  kernel-core-5.14.0-427.35.1.el9_4.cloud.1.0.x86_64
+
+Installed kmod(s) for kmod-idpf-irdma:
+  kmod-idpf-irdma-0.0.129.20_0.0.647-3.el9.x86_64
+
+Available kmod(s) for kmod-idpf-irdma:
+  kmod-idpf-irdma-0.0.129.20_0.0.647-3.el9.x86_64
+
+No matching kmod-idpf-irdma for kernel-core-5.14.0-503.14.1.el9_5.x86_64
+Excluded kernel packages during update (5.14.0-503.14.1.el9_5):
+  python3-perf-5.14.0-503.14.1.el9_5.x86_64
+  kernel-uki-virt-5.14.0-503.14.1.el9_5.x86_64
+  kernel-tools-libs-5.14.0-503.14.1.el9_5.x86_64
+  kernel-tools-5.14.0-503.14.1.el9_5.x86_64
+  kernel-modules-extra-5.14.0-503.14.1.el9_5.x86_64
+  kernel-modules-core-5.14.0-503.14.1.el9_5.x86_64
+  kernel-modules-5.14.0-503.14.1.el9_5.x86_64
+  kernel-debug-uki-virt-5.14.0-503.14.1.el9_5.x86_64
+  kernel-debug-modules-extra-5.14.0-503.14.1.el9_5.x86_64
+  kernel-debug-modules-core-5.14.0-503.14.1.el9_5.x86_64
+  kernel-debug-modules-5.14.0-503.14.1.el9_5.x86_64
+  kernel-debug-core-5.14.0-503.14.1.el9_5.x86_64
+  kernel-debug-5.14.0-503.14.1.el9_5.x86_64
+  kernel-core-5.14.0-503.14.1.el9_5.x86_64
+  kernel-5.14.0-503.14.1.el9_5.x86_64
+  bpftool-7.4.0-503.14.1.el9_5.x86_64
+  kernel-abi-stablelists-5.14.0-503.14.1.el9_5.noarch
+  kernel-uki-virt-addons-5.14.0-503.14.1.el9_5.x86_64
+  rv-5.14.0-503.14.1.el9_5.x86_64
+  rtla-5.14.0-503.14.1.el9_5.x86_64
+  perf-5.14.0-503.14.1.el9_5.x86_64
+  kernel-headers-5.14.0-503.14.1.el9_5.x86_64
+  kernel-devel-matched-5.14.0-503.14.1.el9_5.x86_64
+  kernel-devel-5.14.0-503.14.1.el9_5.x86_64
+  kernel-debug-devel-matched-5.14.0-503.14.1.el9_5.x86_64
+  kernel-debug-devel-5.14.0-503.14.1.el9_5.x86_64
+  kernel-doc-5.14.0-503.14.1.el9_5.noarch
+
+Found matching kmod-idpf-irdma-0.0.129.20_0.0.647-3.el9.x86_64 for kernel-core-5.14.0-427.35.1.el9_4.cloud.1.0.x86_64
+```
 
 ## Contributing
 
