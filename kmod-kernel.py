@@ -114,8 +114,11 @@ class KmodKernelPlugin(dnf.Plugin):
             revive_msg(debug, f'\nAvailable kernel(s):\n  {str(string_kernels)}')
 
         for kmod_name in self.protected_kmods:
-            installed_modules = list(sack.query().installed().filter(name__substr = kmod_name))
-            available_modules = sack.query().available().filter(name__substr = kmod_name).difference(dkms_kmod_modules)
+            installed_modules = list(sack.query().installed().filter(name = kmod_name))
+            available_modules = sack.query().available().filter(name = kmod_name).difference(dkms_kmod_modules)
+            if len(available_modules) == 0:
+                print("WARNING: No {kmod_name} packages available in the repositories, so not blocking updates based on {kmod_name}.")
+                continue
 
             # Print debugging if running from CLI
             if installed_modules:
