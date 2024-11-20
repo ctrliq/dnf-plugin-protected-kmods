@@ -35,17 +35,17 @@ kmod_names = kmod-idpf-irdma
 
 ## Blocking kernel updates
 
-* **RHEL8** or **RHEL9**
+* **EL8** or **EL9**
   Kernel updates will be blocked in the absence of the availability of a compatible kmod package for that kernel.
 
   The `kernel` and `kernel-core` packages will be removed from such `dnf` transactions and an error message will be printed, ex:
 
-  > kmod-idpf-irdma: filtering kernel 5.14.0-503.14.1.el9_5, no precompiled modules available 
+  > kmod-idpf-irdma: filtering kernel 5.14.0-503.14.1.el9_5, no precompiled modules available
 
 
 ### Debugging
 
-* **RHEL8** or **RHEL9**  
+* **EL8** or **EL9**
   Heuristic information can be printed via CLI, such as installed kernel, installed kmod packages, available kernels, available drivers, and available kmod packages.
 
   ```shell
