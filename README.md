@@ -1,4 +1,4 @@
-# dnf-plugin-kmod-kernel
+# dnf-plugin-protected-kmods
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Contributing](https://img.shields.io/badge/Contributing-Developer%20Certificate%20of%20Origin-violet)](https://developercertificate.org)
@@ -10,9 +10,9 @@ Python DNF plugin that prevents new kernels from being updated if a protected km
 
 ## Installation
 
-Copy `kmod-kernel.py` to the dnf plugins directory (usually `/usr/lib/python3.x/site-packages/dnf-plugins`)
+Copy `protected_kmods.py` to the dnf plugins directory (usually `/usr/lib/python3.x/site-packages/dnf-plugins`)
 
-Create a file in `/etc/dnf/plugins/kmod-kernel.conf`:
+Create a file in `/etc/dnf/plugins/protected-kmods.conf`:
 ```
 [protected_kmods]
 kmod_names = <kmod to protect>
@@ -24,9 +24,9 @@ Example:
 kmod_names = kmod-idpf-irdma
 ```
 
-You can also put a drop in configuration file in `/etc/dnf/plugins/kmod-kernel.d`
+You can also put a drop in configuration file in `/etc/dnf/plugins/protected-kmods.d`
 Example:
-`/etc/dnf/plugins/kmod-kernel.d/kmod-idpf-irdma.conf`
+`/etc/dnf/plugins/protected-kmods.d/kmod-idpf-irdma.conf`
 ```
 [protected_kmods]
 kmod_names = kmod-idpf-irdma
@@ -49,7 +49,7 @@ The `kernel` and `kernel-core` packages will be removed from such `dnf` transact
 Heuristic information can be printed via CLI, such as installed kernel, installed kmod packages, available kernels, available drivers, and available kmod packages.
 
 ```shell
-dnf kmod-kernel-plugin
+dnf protected-kmods-plugin
 ```
 
 Example output:

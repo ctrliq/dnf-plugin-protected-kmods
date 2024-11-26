@@ -12,7 +12,7 @@ import dnf.cli
 import dnf.sack
 import libdnf.transaction
 
-PLUGIN_CONF = 'kmod-kernel'
+PLUGIN_CONF = 'protected-kmods'
 
 
 def evr_key(po, sack):
@@ -27,11 +27,11 @@ def revive_msg(var, msg, val = ''):
     return val
 
 
-class KmodKernelPlugin(dnf.Plugin):
-    name = 'kmod-kernel'
+class ProtectedKmodsPlugin(dnf.Plugin):
+    name = 'protected-kmods'
 
     def __init__(self, base, cli):
-        super(KmodKernelPlugin, self).__init__(base, cli)
+        super(ProtectedKmodsPlugin, self).__init__(base, cli)
         self.protected_kmods = []
         self.configure()
 
@@ -45,6 +45,19 @@ class KmodKernelPlugin(dnf.Plugin):
         if os.path.isfile(default_config_file):
             plugin_config.read(default_config_file)
             self._add_protected_kmods(plugin_config, default_config_file)
+
+        # !!!!
+        # Handle old pathnames.  Remove after a few releases since old paths never made GA
+        try:
+            for filename in os.listdir(os.path.join(config_path, "kmod-kernel.d")):
+                if filename.endswith('.conf'):
+                    plugin_config = ConfigParser()
+                    config_file = os.path.join(config_path, "kmod-kernel.d", filename)
+                    plugin_config.read(config_file)
+                    self._add_protected_kmods(plugin_config, config_file)
+        except FileNotFoundError as error:
+            pass
+        # !!!!
 
         try:
             for filename in os.listdir(os.path.join(config_path, PLUGIN_CONF + ".d")):
@@ -84,8 +97,8 @@ class KmodKernelPlugin(dnf.Plugin):
             return
 
         debug = False
-        if hasattr(self.cli, "kmod_kernel_debug"):
-            debug = self.cli.kmod_kernel_debug
+        if hasattr(self.cli, "protected_kmods_debug"):
+            debug = self.cli.protected_kmods_debug
 
         sack = self.base.sack
 
@@ -171,15 +184,15 @@ class KmodKernelPlugin(dnf.Plugin):
 
 
 @dnf.plugin.register_command
-class KmodKernelPluginCommand(dnf.cli.Command):
-    aliases = ('kmod-kernel-plugin',)
+class ProtectedKmodsPluginCommand(dnf.cli.Command):
+    aliases = ('protected-kmods-plugin',)
     summary = 'Helper plugin for DNF to ensure kernels don\'t get updated if kmods are missing'
 
     def configure(self):
         demands = self.cli.demands
         demands.sack_activation = True
         demands.available_repos = True
-        self.cli.kmod_kernel_debug = True
+        self.cli.protected_kmods_debug = True
 
     def run(self):
         pass
