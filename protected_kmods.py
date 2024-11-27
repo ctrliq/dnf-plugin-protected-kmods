@@ -151,6 +151,8 @@ class ProtectedKmodsPlugin(dnf.Plugin):
             # Iterate through each kernel, then iterate through each kmod, checking that the
             # kernel provides all the symbols and versions required by the kmod.  If this is
             # true for one kmod, then the kernel is good, otherwise exclude it.
+            available_modules = list(available_modules)
+            available_modules.reverse()
             for kernelpkg in available_kernels:
                 ksack = sack.query().available().filterm(name = ["kernel-core", "kernel-modules", "kernel-modules-core", "kernel-modules-extra"], version = kernelpkg.version, release = kernelpkg.release)
                 match = False
