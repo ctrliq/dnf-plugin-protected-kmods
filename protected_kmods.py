@@ -130,7 +130,7 @@ class ProtectedKmodsPlugin(dnf.Plugin):
             installed_modules = list(sack.query().installed().filter(name = kmod_name))
             available_modules = sack.query().available().filter(name = kmod_name).difference(dkms_kmod_modules)
             if len(available_modules) == 0:
-                print("WARNING: No {kmod_name} packages available in the repositories, so not blocking updates based on {kmod_name}.")
+                print(f"WARNING: No {kmod_name} packages available in the repositories, so not blocking updates based on {kmod_name}.")
                 continue
 
             # Print debugging if running from CLI
@@ -180,7 +180,7 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                     if not debug:
                         try:
                             sack.add_excludes(all_rpms_of_kernel)
-                            print(f'{kmod_name}: filtering kernel {kernelpkg.version}-{kernelpkg.release}, no precompiled modules available')
+                            print(f'INFO: {kmod_name}: filtering kernel {kernelpkg.version}-{kernelpkg.release}, no precompiled modules available')
                         except Exception as error:
                             print('WARNING: kernel exclude error', error)
 
