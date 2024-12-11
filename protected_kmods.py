@@ -177,6 +177,7 @@ class ProtectedKmodsPlugin(dnf.Plugin):
             # kernel provides all the symbols and versions required by the kmod.  If this is
             # true for one kmod, then the kernel is good, otherwise exclude it.
             available_modules = sorted(available_modules, reverse = True, key = lambda p: evr_key(p, sack))
+            no_match_kmods = list(available_modules)
             for kernelpkg in available_kernels:
                 ksack = sack.query().available().filterm(name = ["kernel-core", "kernel-modules", "kernel-modules-core", "kernel-modules-extra"], version = kernelpkg.version, release = kernelpkg.release)
                 match = False
@@ -189,6 +190,8 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                             kmod_match = False
                     if kmod_match:
                         revive_msg(debug, f'Found matching {kmodpkg} for {kernelpkg}')
+                        if kmodpkg in no_match_kmods:
+                            no_match_kmods.remove(kmodpkg)
                         match = True
                         break
                 if not match:
@@ -208,6 +211,24 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                                 print(f'INFO: {kmod_name}: filtering kernel {kernelpkg.version}-{kernelpkg.release}, no precompiled modules available')
                             except Exception as error:
                                 print('WARNING: kernel exclude error', error)
+
+            # There may be situations where we have kmods that don't have any matching kernel.  In
+            # this case, we want to exclude them so users don't end up with "none of the providers
+            # can be installed" errors.
+            excluded_kmods = no_match_kmods
+            for kmodpkg in excluded_kmods:
+                # Exclude packages
+                if not debug:
+                    try:
+                        sack.add_excludes([kmodpkg])
+                    except Exception as error:
+                        print('WARNING: kmod exclude error', error)
+            if not debug:
+                string_excluded_kmods = ', '.join(f"{k.version}-{k.release}" for k in excluded_kmods)
+                print(f'INFO: {kmod_name}: filtering kmods {string_excluded_kmods}, no matching kernel')
+            string_all_rpms_excluded_kmods = '\n  '.join([str(elem) for elem in excluded_kmods])
+            revive_msg(debug, f'Excluded kmod packages during update due to non-matching kernels:\n  {string_all_rpms_excluded_kmods}')
+            revive_msg(debug, '')
 
 
 @dnf.plugin.register_command
