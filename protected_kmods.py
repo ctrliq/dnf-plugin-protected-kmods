@@ -144,6 +144,35 @@ class ProtectedKmodsPlugin(dnf.Plugin):
             if installed_modules and 'dkms' in string_modules:
                 continue
 
+            # Strange things happen with priorities and kmods.  If there's a newer kmod available
+            # for a newer kernel and the kernel is in a higher priority value repository (which
+            # means the repo is actually lower priority) than an older kernel, the kernel and kmod
+            # will be updated.  We work around that by excluding all kernels from lower priority
+            # repos
+            excluded_priority_kernels = []
+            lowest_priority = 99999999 # Set to a ridiculously high value
+            for kernelpkg in available_kernels:
+                if lowest_priority > kernelpkg.base.repos[kernelpkg.reponame].priority:
+                    lowest_priority = kernelpkg.base.repos[kernelpkg.reponame].priority
+            for kernelpkg in available_kernels:
+                if kernelpkg.base.repos[kernelpkg.reponame].priority > lowest_priority:
+                    # Assemble a list of all packages that are built from the same kernel source rpm
+                    all_rpms_of_kernel = list(sack.query().available().filter(release = kernelpkg.release))
+                    excluded_priority_kernels.append(kernelpkg)
+
+                    string_all_rpms_of_kernel = '\n  '.join([str(elem) for elem in all_rpms_of_kernel])
+                    revive_msg(debug, f'Other kernels in repositories with lower priority value than {kernelpkg} in {kernelpkg.reponame}')
+                    revive_msg(debug, f'Excluded kernel packages during update ({str(kernelpkg.version)}-{str(kernelpkg.release)}):\n  {str(string_all_rpms_of_kernel)}')
+                    revive_msg(debug, '')
+
+                    # Exclude packages
+                    if not debug:
+                        try:
+                            sack.add_excludes(all_rpms_of_kernel)
+                            print(f'INFO: {kmod_name}: filtering kernel {kernelpkg.version}-{kernelpkg.release}, repo priority value higher than other repos with kernels')
+                        except Exception as error:
+                            print('WARNING: kernel exclude error', error)
+
             # Iterate through each kernel, then iterate through each kmod, checking that the
             # kernel provides all the symbols and versions required by the kmod.  If this is
             # true for one kmod, then the kernel is good, otherwise exclude it.
@@ -168,16 +197,17 @@ class ProtectedKmodsPlugin(dnf.Plugin):
 
                     string_all_rpms_of_kernel = '\n  '.join([str(elem) for elem in all_rpms_of_kernel])
                     revive_msg(debug, f'No matching {kmod_name} for {kernelpkg}')
-                    revive_msg(debug, f'Excluded kernel packages during update ({str(kernelpkg.version)}-{str(kernelpkg.release)}):\n  {str(string_all_rpms_of_kernel)}')
-                    revive_msg(debug, '')
+                    if kernelpkg not in excluded_priority_kernels:
+                        revive_msg(debug, f'Excluded kernel packages during update ({str(kernelpkg.version)}-{str(kernelpkg.release)}):\n  {string_all_rpms_of_kernel}')
+                        revive_msg(debug, '')
 
-                    # Exclude packages
-                    if not debug:
-                        try:
-                            sack.add_excludes(all_rpms_of_kernel)
-                            print(f'INFO: {kmod_name}: filtering kernel {kernelpkg.version}-{kernelpkg.release}, no precompiled modules available')
-                        except Exception as error:
-                            print('WARNING: kernel exclude error', error)
+                        # Exclude packages
+                        if not debug:
+                            try:
+                                sack.add_excludes(all_rpms_of_kernel)
+                                print(f'INFO: {kmod_name}: filtering kernel {kernelpkg.version}-{kernelpkg.release}, no precompiled modules available')
+                            except Exception as error:
+                                print('WARNING: kernel exclude error', error)
 
 
 @dnf.plugin.register_command
