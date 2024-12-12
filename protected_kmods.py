@@ -17,8 +17,8 @@ def evr_key(po, sack):
     return func(f'{str(po.epoch)}:{str(po.version)}-{str(po.release)}')
 
 
-def print_cmd(is_cmd, msg):
-    if is_cmd:
+def print_cmd(is_cli, msg):
+    if is_cli:
         print(msg)
 
 
@@ -40,19 +40,6 @@ class ProtectedKmodsPlugin(dnf.Plugin):
         if os.path.isfile(default_config_file):
             plugin_config.read(default_config_file)
             self._add_protected_kmods(plugin_config, default_config_file)
-
-        # !!!!
-        # Handle old pathnames.  Remove after a few releases since old paths never made GA
-        try:
-            for filename in os.listdir(os.path.join(config_path, "kmod-kernel.d")):
-                if filename.endswith('.conf'):
-                    plugin_config = ConfigParser()
-                    config_file = os.path.join(config_path, "kmod-kernel.d", filename)
-                    plugin_config.read(config_file)
-                    self._add_protected_kmods(plugin_config, config_file)
-        except FileNotFoundError as error:
-            pass
-        # !!!!
 
         try:
             for filename in os.listdir(os.path.join(config_path, PLUGIN_CONF + ".d")):
@@ -91,9 +78,9 @@ class ProtectedKmodsPlugin(dnf.Plugin):
         if len(self.protected_kmods) == 0:
             return
 
-        is_cmd = False
-        if hasattr(self.cli, "protected_kmods_is_cmd"):
-            is_cmd = self.cli.protected_kmods_is_cmd
+        is_cli = False
+        if hasattr(self.cli, "protected_kmods_is_cli"):
+            is_cli = self.cli.protected_kmods_is_cli
 
         sack = self.base.sack
 
@@ -101,7 +88,7 @@ class ProtectedKmodsPlugin(dnf.Plugin):
         installed_kernel = list(sack.query().installed().filter(name = "kernel-core"))
 
         # container/chroot
-        if not installed_kernel and not is_cmd:
+        if not installed_kernel:
             return
 
         # The most recent installed kernel package
@@ -113,13 +100,14 @@ class ProtectedKmodsPlugin(dnf.Plugin):
         dkms_kmod_modules = sack.query().available().filter(name__substr = "dkms")
 
         # Print debugging if running from CLI
-        if installed_kernels:
-            string_kernels = '\n  '.join([str(elem) for elem in installed_kernels])
-            print_cmd(is_cmd, f'\nInstalled kernel(s):\n  {str(string_kernels)}')
+        if is_cli:
+            if installed_kernels:
+                string_kernels = '\n  '.join([str(elem) for elem in installed_kernels])
+                print_cmd(is_cli, f'\nInstalled kernel(s):\n  {str(string_kernels)}')
 
-        if available_kernels:
-            string_kernels = '\n  '.join([str(elem) for elem in available_kernels])
-            print_cmd(is_cmd, f'\nAvailable kernel(s):\n  {str(string_kernels)}')
+            if available_kernels:
+                string_kernels = '\n  '.join([str(elem) for elem in available_kernels])
+                print_cmd(is_cli, f'\nAvailable kernel(s):\n  {str(string_kernels)}')
 
         for kmod_name in self.protected_kmods:
             installed_modules = list(sack.query().installed().filter(name = kmod_name))
@@ -128,16 +116,15 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                 logger.warning(f"WARNING: No {kmod_name} packages available in the repositories, so not blocking updates based on {kmod_name}.")
                 continue
 
-            # Print debugging if running from CLI
-            if installed_modules:
-                string_modules = '\n  '.join([str(elem) for elem in installed_modules])
-                print_cmd(is_cmd, f'\nInstalled kmod(s) for {kmod_name}:\n  {str(string_modules)}')
-
-            if available_modules:
-                string_all_modules = '\n  '.join([str(elem) for elem in available_modules])
-                print_cmd(is_cmd, f'\nAvailable kmod(s) for {kmod_name}:\n  {str(string_all_modules)}')
-
-            print_cmd(is_cmd, '')
+            if is_cli:
+                # Print debugging if running from CLI
+                if installed_modules:
+                    string_modules = '\n  '.join([str(elem) for elem in installed_modules])
+                    print_cmd(is_cli, f'\nInstalled kmod(s) for {kmod_name}:\n  {str(string_modules)}')
+                if available_modules:
+                    string_all_modules = '\n  '.join([str(elem) for elem in available_modules])
+                    print_cmd(is_cli, f'\nAvailable kmod(s) for {kmod_name}:\n  {str(string_all_modules)}')
+                print_cmd(is_cli, '')
 
             # DKMS stream enabled
             if installed_modules and 'dkms' in string_modules:
@@ -159,18 +146,21 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                     all_rpms_of_kernel = list(sack.query().available().filter(release = kernelpkg.release))
                     excluded_priority_kernels.append(kernelpkg)
 
-                    string_all_rpms_of_kernel = '\n  '.join([str(elem) for elem in all_rpms_of_kernel])
-                    print_cmd(is_cmd, f'Other kernels in repositories with lower priority value than {kernelpkg} in {kernelpkg.reponame}')
-                    print_cmd(is_cmd, f'Excluded kernel packages during update ({str(kernelpkg.version)}-{str(kernelpkg.release)}):\n  {str(string_all_rpms_of_kernel)}')
-                    print_cmd(is_cmd, '')
-
-                    # Exclude packages
-                    if not is_cmd:
+                    if not is_cli:
+                        # Exclude packages
                         try:
                             sack.add_excludes(all_rpms_of_kernel)
                             logger.debug(f'DEBUG: {kmod_name}: filtering kernel {kernelpkg.version}-{kernelpkg.release}, repo priority value higher than other repos with kernels')
                         except Exception as error:
                             logger.warning('WARNING: kernel exclude error', error)
+                            logger.warning('WARNING: any further actions would be undefined, so exiting dnf-plugin-protected-kmods')
+                            return
+                    else:
+                        string_all_rpms_of_kernel = '\n  '.join([str(elem) for elem in all_rpms_of_kernel])
+                        print_cmd(is_cli, f'Other kernels in repositories with lower priority value than {kernelpkg} in {kernelpkg.reponame}')
+                        print_cmd(is_cli, f'Excluded kernel packages during update ({str(kernelpkg.version)}-{str(kernelpkg.release)}):\n  {str(string_all_rpms_of_kernel)}')
+                        print_cmd(is_cli, '')
+
 
             # Iterate through each kernel, then iterate through each kmod, checking that the
             # kernel provides all the symbols and versions required by the kmod.  If this is
@@ -188,8 +178,12 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                         if not ksack.filter(provides=item):
                             kmod_match = False
                     if kmod_match:
-                        print_cmd(is_cmd, f'Found matching {kmodpkg} for {kernelpkg}')
-                        if kmodpkg in no_match_kmods:
+                        if is_cli:
+                            excluded = ""
+                            if kernelpkg in excluded_priority_kernels:
+                                excluded = " (excluded kernel)"
+                            print_cmd(is_cli, f'Found matching {kmodpkg} for {kernelpkg}{excluded}')
+                        if kmodpkg in no_match_kmods and kernelpkg not in excluded_priority_kernels:
                             no_match_kmods.remove(kmodpkg)
                         match = True
                         break
@@ -197,37 +191,40 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                     # Assemble a list of all packages that are built from the same kernel source rpm
                     all_rpms_of_kernel = sack.query().available().filter(release = kernelpkg.release)
 
-                    string_all_rpms_of_kernel = '\n  '.join([str(elem) for elem in all_rpms_of_kernel])
-                    print_cmd(is_cmd, f'No matching {kmod_name} for {kernelpkg}')
+                    print_cmd(is_cli, f'No matching {kmod_name} for {kernelpkg}')
                     if kernelpkg not in excluded_priority_kernels:
-                        print_cmd(is_cmd, f'Excluded kernel packages during update ({str(kernelpkg.version)}-{str(kernelpkg.release)}):\n  {string_all_rpms_of_kernel}')
-                        print_cmd(is_cmd, '')
-
-                        # Exclude packages
-                        if not is_cmd:
+                        if not is_cli:
+                            # Exclude packages
                             try:
                                 sack.add_excludes(all_rpms_of_kernel)
                                 logger.info(f'INFO: {kmod_name}: filtering kernel {kernelpkg.version}-{kernelpkg.release}, no precompiled modules available')
                             except Exception as error:
                                 logger.warning('WARNING: kernel exclude error', error)
+                                logger.warning('WARNING: any further actions would be undefined, so exiting dnf-plugin-protected-kmods')
+                                return
+                        else:
+                            string_all_rpms_of_kernel = '\n  '.join([str(elem) for elem in all_rpms_of_kernel])
+                            print_cmd(is_cli, f'Excluded kernel packages during update ({str(kernelpkg.version)}-{str(kernelpkg.release)}):\n  {string_all_rpms_of_kernel}')
+                            print_cmd(is_cli, '')
 
             # There may be situations where we have kmods that don't have any matching kernel.  In
             # this case, we want to exclude them so users don't end up with "none of the providers
             # can be installed" errors.
             excluded_kmods = no_match_kmods
-            for kmodpkg in excluded_kmods:
+            if not is_cli:
                 # Exclude packages
-                if not is_cmd:
-                    try:
-                        sack.add_excludes([kmodpkg])
-                    except Exception as error:
-                        logger.warning('WARNING: kmod exclude error', error)
-            if not is_cmd:
+                try:
+                    sack.add_excludes(excluded_kmods)
+                except Exception as error:
+                    logger.warning('WARNING: kmod exclude error', error)
+                    logger.warning('WARNING: any further actions would be undefined, so exiting dnf-plugin-protected-kmods')
+                    return
                 string_excluded_kmods = ', '.join(f"{k.version}-{k.release}" for k in excluded_kmods)
                 logger.debug(f'DEBUG: {kmod_name}: filtering kmods {string_excluded_kmods}, no matching kernel')
-            string_all_rpms_excluded_kmods = '\n  '.join([str(elem) for elem in excluded_kmods])
-            print_cmd(is_cmd, f'Excluded kmod packages during update due to non-matching kernels:\n  {string_all_rpms_excluded_kmods}')
-            print_cmd(is_cmd, '')
+            else:
+                string_all_rpms_excluded_kmods = '\n  '.join([str(elem) for elem in excluded_kmods])
+                print_cmd(is_cli, f'Excluded kmod packages during update due to non-matching kernels:\n  {string_all_rpms_excluded_kmods}')
+                print_cmd(is_cli, '')
 
 
 @dnf.plugin.register_command
@@ -239,7 +236,7 @@ class ProtectedKmodsPluginCommand(dnf.cli.Command):
         demands = self.cli.demands
         demands.sack_activation = True
         demands.available_repos = True
-        self.cli.protected_kmods_is_cmd = True
+        self.cli.protected_kmods_is_cli = True
 
     def run(self):
         pass
