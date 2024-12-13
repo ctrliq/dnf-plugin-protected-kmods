@@ -8,6 +8,7 @@ Source0:    https://github.com/ctrliq/%{name}/releases/download/v%{version}/%{na
 BuildArch:  noarch
 
 BuildRequires: python3-devel
+BuildRequires: pandoc
 
 Requires:   python3-dnf
 
@@ -24,19 +25,28 @@ if there is no matching precompiled kernel module package available.
 %autosetup
 
 
+%build
+pandoc README.md -t plain -o README
+
+
 %install
 mkdir -p %{buildroot}%{_sysconfdir}/dnf/plugins/protected-kmods.d/
 install -D -m 644 src/protected_kmods.py %{buildroot}%{python3_sitelib}/dnf-plugins/protected_kmods.py
+mkdir -p %{buildroot}%{_docdir}/dnf-plugin-protected-kmods
+install -m 0644 README %{buildroot}%{_docdir}/dnf-plugin-protected-kmods/
 
 
 %files
+%license LICENSE
 %{python3_sitelib}/dnf-plugins/*
 %{_sysconfdir}/dnf/plugins/protected-kmods.d/
+%doc %{_docdir}/dnf-plugin-protected-kmods/
 
 
 %changelog
 * Fri Dec 13 2024 Jonathan Dieter <jdieter@ciq.com> - 0.7-1
 - Fix bug introduced in 0.6
+- Add documentation
 
 * Thu Dec 12 2024 Jonathan Dieter <jdieter@ciq.com> - 0.6-1
 - Ensure that available_modules are sorted by evr_key in reverse order
