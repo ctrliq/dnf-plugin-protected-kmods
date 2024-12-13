@@ -1,5 +1,5 @@
 Name:       dnf-plugin-protected-kmods
-Version:    0.6
+Version:    0.7
 Release:    1%{?dist}
 Summary:    DNF plugin needed to protect kmods
 License:    MIT
@@ -35,6 +35,9 @@ install -D -m 644 src/protected_kmods.py %{buildroot}%{python3_sitelib}/dnf-plug
 
 
 %changelog
+* Fri Dec 13 2024 Jonathan Dieter <jdieter@ciq.com> - 0.7-1
+- Fix bug introduced in 0.6
+
 * Thu Dec 12 2024 Jonathan Dieter <jdieter@ciq.com> - 0.6-1
 - Ensure that available_modules are sorted by evr_key in reverse order
 - Exclude kernels if they're in a higher priority value repo

@@ -116,15 +116,14 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                 logger.warning(f"WARNING: No {kmod_name} packages available in the repositories, so not blocking updates based on {kmod_name}.")
                 continue
 
-            if is_cli:
-                # Print debugging if running from CLI
-                if installed_modules:
-                    string_modules = '\n  '.join([str(elem) for elem in installed_modules])
-                    print_cmd(is_cli, f'\nInstalled kmod(s) for {kmod_name}:\n  {str(string_modules)}')
-                if available_modules:
-                    string_all_modules = '\n  '.join([str(elem) for elem in available_modules])
-                    print_cmd(is_cli, f'\nAvailable kmod(s) for {kmod_name}:\n  {str(string_all_modules)}')
-                print_cmd(is_cli, '')
+            # Print debugging if running from CLI
+            if installed_modules:
+                string_modules = '\n  '.join([str(elem) for elem in installed_modules])
+                print_cmd(is_cli, f'\nInstalled kmod(s) for {kmod_name}:\n  {str(string_modules)}')
+            if available_modules:
+                string_all_modules = '\n  '.join([str(elem) for elem in available_modules])
+                print_cmd(is_cli, f'\nAvailable kmod(s) for {kmod_name}:\n  {str(string_all_modules)}')
+            print_cmd(is_cli, '')
 
             # DKMS stream enabled
             if installed_modules and 'dkms' in string_modules:
