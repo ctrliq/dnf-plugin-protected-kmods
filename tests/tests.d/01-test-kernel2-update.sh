@@ -9,5 +9,5 @@ copy_packages kmod-test1 test1
 mkrepo test1
 mkdnfconfig test1
 installpkg kmod-test
-testdnf test1 "kernel *x86_64 *6.0.0-2 *test1" "Install  4 Packages" '^Complete!$'
+testdnf test1 "kernel *x86_64 *6.0.0-2 *test1" "Install.* 4 [Pp]ackages" '^Complete!$'
 exitcode

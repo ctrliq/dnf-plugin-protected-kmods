@@ -27,8 +27,8 @@ EOF
 function snapshotpkgs {
     rm -rf /var/tmp/snapshot/rpm /var/tmp/snapshot/dnf
     mkdir -p /var/tmp/snapshot
-    cp -a --reflink=auto /var/lib/dnf /var/tmp/snapshot/
-    cp -a --reflink=auto /var/lib/rpm /var/tmp/snapshot/
+    cp -a --reflink=auto $(readlink -f /var/lib/dnf) /var/tmp/snapshot/
+    cp -a --reflink=auto $(readlink -f /var/lib/rpm) /var/tmp/snapshot/
 }
 
 function cleanup {
@@ -42,17 +42,19 @@ function cleanup {
     rm -rf /var/cache/dnf/*
     rm -rf /var/tmp/repos/*
     # Restore RPM and DNF packages
-    rm -rf /var/lib/dnf /var/lib/rpm
-    cp -a --reflink=auto /var/tmp/snapshot/dnf /var/lib/
-    cp -a --reflink=auto /var/tmp/snapshot/rpm /var/lib/
+    dnfloc=$(readlink -f /var/lib/dnf)
+    rpmloc=$(readlink -f /var/lib/rpm)
+    rm -rf "$dnfloc" "$rpmloc"
+    cp -a --reflink=auto /var/tmp/snapshot/dnf "$dnfloc"
+    cp -a --reflink=auto /var/tmp/snapshot/rpm "$rpmloc"
 }
 
 function installpkg {
-    dnf -y install "$1" | tee -a /var/log/dnf-output.log
+    dnf -y install "$1" 2>&1 | tee -a /var/log/dnf-output.log
 }
 
 function removepkg {
-    dnf -y remove "$1" | tee -a /var/log/dnf-output.log
+    dnf -y remove "$1" 2>&1 | tee -a /var/log/dnf-output.log
 }
 
 function testdnf {
@@ -61,11 +63,11 @@ function testdnf {
     shift 1
     verbose=""
     if [ "$1" == "-v" ]; then
-        verbose=" -v"
+        verbose=" --setopt=debuglevel=4"
         shift 1
     fi
     set -x
-    dnf$verbose -y update | tee /var/log/dnf-output-${logloc}.log
+    dnf$verbose -y update 2>&1 | tee /var/log/dnf-output-${logloc}.log
     retval=0
     for match_line in "$@"; do
         cat /var/log/dnf-output-${logloc}.log | grep -q "$match_line"

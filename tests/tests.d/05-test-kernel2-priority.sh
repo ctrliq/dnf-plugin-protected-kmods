@@ -21,7 +21,7 @@ testdnf test5 -v 'DEBUG: kmod-test: filtering kernel 6.0.0-1, repo priority valu
     'DEBUG: kmod-test: filtering kernel 6.0.0-3, repo priority value higher than other repos with kernels' \
     'DEBUG: kmod-test: filtering kmods 1.0-2, no matching kernel' \
     'kernel *x86_64 *6.0.0-2 *test5a' \
-    'Install  4 Packages' \
+    'Install.* 4 [Pp]ackages' \
     '^Complete!$'
 cleanup
 exitcode

@@ -11,6 +11,6 @@ mkdnfconfig test2
 installpkg kmod-test
 copy_packages kernel3 test2
 mkrepo test2
-testdnf test2 "INFO: kmod-test: filtering kernel 6.0.0-3, no precompiled modules available" "kernel *x86_64 *6.0.0-2 *test2" "Install  4 Packages" '^Complete!$'
+testdnf test2 "INFO: kmod-test: filtering kernel 6.0.0-3, no precompiled modules available" "kernel *x86_64 *6.0.0-2 *test2" "Install.* 4 [Pp]ackages" '^Complete!$'
 cleanup
 exitcode

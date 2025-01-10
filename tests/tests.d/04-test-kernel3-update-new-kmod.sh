@@ -12,6 +12,6 @@ installpkg kmod-test
 copy_packages kernel3 test4
 copy_packages kmod-test2 test4
 mkrepo test4
-testdnf test4 "kernel *x86_64 *6.0.0-3 *test4" "Install  4 Packages" '^Complete!$'
+testdnf test4 "kernel *x86_64 *6.0.0-3 *test4" "Install.* 4 [Pp]ackages" '^Complete!$'
 cleanup
 exitcode

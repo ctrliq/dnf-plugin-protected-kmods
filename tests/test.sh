@@ -13,3 +13,4 @@ for i in test-build/Dockerfile-base-*; do
         retval=1
     fi
 done
+exit $retval

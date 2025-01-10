@@ -76,3 +76,13 @@ Dummy kernel-modules-core package
 %files modules
 
 %files modules-core
+
+%changelog
+* Fri Jan 10 2025 Jonathan Dieter <jdieter@ciq.com> - 6.0.0-3
+- Third release
+
+* Thu Jan 09 2025 Jonathan Dieter <jdieter@ciq.com> - 6.0.0-2
+- Second release
+
+* Wed Jan 08 2025 Jonathan Dieter <jdieter@ciq.com> - 6.0.0-1
+- Initial release
