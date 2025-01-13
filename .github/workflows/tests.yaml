@@ -1,0 +1,14 @@
+name: Tests
+run-name: Tests
+on: [push]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - run: |
+          cd ${{ github.workspace }} && ./tests/build.sh
+      - run: echo "Running tests"
+      - run: |
+          cd ${{ github.workspace }} && ./tests/test.sh

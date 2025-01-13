@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Contributing](https://img.shields.io/badge/Contributing-Developer%20Certificate%20of%20Origin-violet)](https://developercertificate.org)
+[![Tests](https://github.com/ctrliq/dnf-plugin-protected-kmods/actions/workflows/tests.yaml/badge.svg)](https://github.com/ctrliq/dnf-plugin-protected-kmods/actions/workflows/tests.yaml)
 
 ## Overview
 
