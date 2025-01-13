@@ -1,5 +1,5 @@
 Name:       dnf-plugin-protected-kmods
-Version:    0.7
+Version:    0.8
 Release:    1%{?dist}
 Summary:    DNF plugin needed to protect kmods
 License:    MIT
@@ -44,6 +44,9 @@ install -m 0644 README %{buildroot}%{_docdir}/dnf-plugin-protected-kmods/
 
 
 %changelog
+* Mon Jan 13 2025 Jonathan Dieter <jdieter@ciq.com> - 0.8-1
+- Temporarily disable plugin when available package sack isn't populated
+
 * Fri Dec 13 2024 Jonathan Dieter <jdieter@ciq.com> - 0.7-1
 - Fix bug introduced in 0.6
 - Add documentation

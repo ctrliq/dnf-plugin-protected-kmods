@@ -81,6 +81,32 @@ function testdnf {
     return $retval
 }
 
+function testdnfcmd {
+    logloc="$1"
+    rm -rf /var/cache/dnf/*
+    shift 1
+    verbose=""
+    if [ "$1" == "-v" ]; then
+        verbose=" --setopt=debuglevel=4"
+        shift 1
+    fi
+    cmd="$1"
+    shift 1
+    set -x
+    dnf$verbose $cmd 2>&1 | tee /var/log/dnf-output-${logloc}.log
+    retval=0
+    for match_line in "$@"; do
+        cat /var/log/dnf-output-${logloc}.log | grep -q "$match_line"
+        if [ "$?" -ne 0 ]; then
+            echo -e "\n!!!!!! String $match_line not found in output !!!!!!!!\n"
+            export __EXITCODE=1
+            retval=1
+        fi
+    done
+    set +x
+    return $retval
+}
+
 function exitcode {
     exit $__EXITCODE
 }

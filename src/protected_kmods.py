@@ -84,6 +84,12 @@ class ProtectedKmodsPlugin(dnf.Plugin):
 
         sack = self.base.sack
 
+        # If nothing's in the available sack, then it's not been populated, which means that we're
+        # can just skip all this since we're modifying what's available
+        if len(sack.query().available().filter()) == 0:
+            logger.debug("DEBUG: available sack is empty, so temporarily disabling protected-kmods plugin")
+            return
+
         # check installed
         installed_kernel = list(sack.query().installed().filter(name = "kernel-core"))
 
