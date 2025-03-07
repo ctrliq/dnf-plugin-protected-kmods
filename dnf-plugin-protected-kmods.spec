@@ -1,5 +1,5 @@
 Name:       dnf-plugin-protected-kmods
-Version:    0.9
+Version:    0.9.1
 Release:    1%{?dist}
 Summary:    DNF plugin needed to protect kmods
 License:    MIT
@@ -44,6 +44,9 @@ install -m 0644 README %{buildroot}%{_docdir}/dnf-plugin-protected-kmods/
 
 
 %changelog
+* Fri Mar 07 2025 Jonathan Dieter <jdieter@ciq.com> - 0.9.1-1
+- Fix bug with filtering that occasionally has false negatives
+
 * Fri Mar 07 2025 Jonathan Dieter <jdieter@ciq.com> - 0.9-1
 - Speed up filtering when there are a large number of kernels
 - Change default to enforce a kmod blocking kernel updates, even when the kmod

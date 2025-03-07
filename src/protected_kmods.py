@@ -188,14 +188,17 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                 ksack = sack.query().available().filterm(name = ["kernel-core", "kernel-modules", "kernel-modules-core", "kernel-modules-extra"], version = kernelpkg.version, release = kernelpkg.release)
                 match = False
                 for kmodpkg in all_modules:
-                    modsack = ksack.filter()
                     kmod_match = True
                     for item in kmodpkg.requires:
                         if not str(item).startswith("kernel"):
                             continue
-                        if not modsack.filterm(provides=item):
-                            kmod_match = False
-                            break
+                        if not ksack.filterm(provides=item):
+                            # Most of the time filterm works as expected, but occasionally it gives a false negative, so verify once more with a new sack and filter()
+                            # Worst case scenario, we do this a few times per kmod, but it's still significantly faster than using filter() each time
+                            ksack = sack.query().available().filterm(name = ["kernel-core", "kernel-modules", "kernel-modules-core", "kernel-modules-extra"], version = kernelpkg.version, release = kernelpkg.release)
+                            if not ksack.filter(provides=item):
+                                kmod_match = False
+                                break
                     if kmod_match:
                         if is_cli:
                             excluded = ""
