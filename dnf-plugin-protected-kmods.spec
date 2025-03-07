@@ -46,6 +46,8 @@ install -m 0644 README %{buildroot}%{_docdir}/dnf-plugin-protected-kmods/
 %changelog
 * Fri Mar 07 2025 Jonathan Dieter <jdieter@ciq.com> - 0.9-1
 - Speed up filtering when there are a large number of kernels
+- Change default to enforce a kmod blocking kernel updates, even when the kmod
+  isn't in a repo
 
 * Mon Jan 13 2025 Jonathan Dieter <jdieter@ciq.com> - 0.8-1
 - Temporarily disable plugin when available package sack isn't populated
