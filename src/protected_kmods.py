@@ -28,6 +28,7 @@ class ProtectedKmodsPlugin(dnf.Plugin):
     def __init__(self, base, cli):
         super(ProtectedKmodsPlugin, self).__init__(base, cli)
         self.protected_kmods = []
+        self.block_updates_when_kmod_not_in_repos = True
         self.configure()
 
 
@@ -39,23 +40,27 @@ class ProtectedKmodsPlugin(dnf.Plugin):
         default_config_file = os.path.join(config_path, PLUGIN_CONF + ".conf")
         if os.path.isfile(default_config_file):
             plugin_config.read(default_config_file)
-            self._add_protected_kmods(plugin_config, default_config_file)
-
+            self._add_protected_kmods(plugin_config, default_config_file, False)
+            try:
+                if plugin_config.get("main", "block_updates_when_kmod_not_in_repos").lower() in ("false", "f", "0"):
+                    self.block_updates_when_kmod_not_in_repos = False
+            except (NoOptionError, NoSectionError) as error:
+                pass
         try:
             for filename in os.listdir(os.path.join(config_path, PLUGIN_CONF + ".d")):
                 if filename.endswith('.conf'):
                     plugin_config = ConfigParser()
                     config_file = os.path.join(config_path, PLUGIN_CONF + ".d", filename)
                     plugin_config.read(config_file)
-                    self._add_protected_kmods(plugin_config, config_file)
+                    self._add_protected_kmods(plugin_config, config_file, True)
         except FileNotFoundError as error:
             pass
         self.protected_kmods = list(set(self.protected_kmods))
         self.protected_kmods.sort()
 
 
-    def _add_protected_kmods(self, config, config_file):
-        kmod_names = self._read_config_item(config, config_file, "protected_kmods", "kmod_names", None)
+    def _add_protected_kmods(self, config, config_file, print_warning):
+        kmod_names = self._read_config_item(config, config_file, "protected_kmods", "kmod_names", None, print_warning)
         if kmod_names is None:
             return
         if type(kmod_names) == str:
@@ -66,11 +71,12 @@ class ProtectedKmodsPlugin(dnf.Plugin):
         self.protected_kmods.extend(kmod_names)
 
 
-    def _read_config_item(self, config, config_file, hub, section, default):
+    def _read_config_item(self, config, config_file, hub, section, default, print_warning):
         try:
             return config.get(hub, section)
         except (NoOptionError, NoSectionError) as error:
-            logger.warning(f'Invalid config in {config_file}: {error}')
+            if print_warning:
+                logger.warning(f'Invalid config in {config_file}: {error}')
             return default
 
 
@@ -118,7 +124,7 @@ class ProtectedKmodsPlugin(dnf.Plugin):
         for kmod_name in self.protected_kmods:
             installed_modules = list(sack.query().installed().filter(name = kmod_name))
             available_modules = sack.query().available().filter(name = kmod_name).difference(dkms_kmod_modules)
-            if len(available_modules) == 0:
+            if len(available_modules) == 0 and not self.block_updates_when_kmod_not_in_repos:
                 logger.warning(f"WARNING: No {kmod_name} packages available in the repositories, so not blocking updates based on {kmod_name}.")
                 continue
 
@@ -170,12 +176,18 @@ class ProtectedKmodsPlugin(dnf.Plugin):
             # Iterate through each kernel, then iterate through each kmod, checking that the
             # kernel provides all the symbols and versions required by the kmod.  If this is
             # true for one kmod, then the kernel is good, otherwise exclude it.
-            available_modules = sorted(available_modules, reverse = True, key = lambda p: evr_key(p, sack))
-            no_match_kmods = list(available_modules)
+            all_modules = list(available_modules)
+            available_modules_str = [str(i) for i in available_modules]
+            for pkg in installed_modules:
+                if str(pkg) in available_modules_str:
+                    continue
+                all_modules.append(pkg)
+            all_modules = sorted(all_modules, reverse = True, key = lambda p: evr_key(p, sack))
+            no_match_kmods = list(all_modules)
             for kernelpkg in available_kernels:
                 ksack = sack.query().available().filterm(name = ["kernel-core", "kernel-modules", "kernel-modules-core", "kernel-modules-extra"], version = kernelpkg.version, release = kernelpkg.release)
                 match = False
-                for kmodpkg in available_modules:
+                for kmodpkg in all_modules:
                     modsack = ksack.filter()
                     kmod_match = True
                     for item in kmodpkg.requires:
