@@ -124,9 +124,13 @@ class ProtectedKmodsPlugin(dnf.Plugin):
         for kmod_name in self.protected_kmods:
             installed_modules = list(sack.query().installed().filter(name = kmod_name))
             available_modules = sack.query().available().filter(name = kmod_name).difference(dkms_kmod_modules)
-            if len(available_modules) == 0 and not self.block_updates_when_kmod_not_in_repos:
-                logger.warning(f"WARNING: No {kmod_name} packages available in the repositories, so not blocking updates based on {kmod_name}.")
-                continue
+            if len(available_modules) == 0:
+                logger.warning(f"WARNING: {kmod_name} is installed, but there are no {kmod_name} packages available in the configured repositories.")
+                if not self.block_updates_when_kmod_not_in_repos:
+                    logger.warning(f"WARNING: Kernel updates will not be blocked based on {kmod_name}.")
+                    continue
+                else:
+                    logger.warning(f"WARNING: Future kernel updates may be blocked until {kmod_name} is removed from this system.")
 
             # Print debugging if running from CLI
             if installed_modules:

@@ -13,6 +13,7 @@ mkdnfconfig test7b
 installpkg kmod-test
 copy_packages kernel3 test7a
 mkrepo test7a
-testdnfcmd test7b " --disablerepo=test7b -y update" "INFO: kmod-test: filtering kernel 6.0.0-3, no precompiled modules available" "kernel *x86_64 *6.0.0-2 *test7a" "Install.* 4 [Pp]ackages" '^Complete!$'
+testdnfcmd test7b " --disablerepo=test7b -y update" "Future kernel updates may be blocked until kmod-test is removed from this system." \
+   "INFO: kmod-test: filtering kernel 6.0.0-3, no precompiled modules available" "kernel *x86_64 *6.0.0-2 *test7a" "Install.* 4 [Pp]ackages" '^Complete!$'
 cleanup
 exitcode
