@@ -17,7 +17,7 @@ mkdnfconfig test7b
 installpkg kmod-test
 copy_packages kernel3 test7a
 mkrepo test7a
-testdnfcmd test7b " --disablerepo=test7b -y update" "WARNING: No kmod-test packages available in the repositories, so not blocking updates based on kmod-test." "kernel *x86_64 *6.0.0-3 *test7a" "Install.* 4 [Pp]ackages" '^Complete!$'
+testdnfcmd test7b " --disablerepo=test7b -y update" "WARNING: Kernel updates will not be blocked based on kmod-test." "kernel *x86_64 *6.0.0-3 *test7a" "Install.* 4 [Pp]ackages" '^Complete!$'
 cleanup
 rm -f /etc/dnf/plugins/protected-kmods.conf
 exitcode
