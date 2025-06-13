@@ -1,6 +1,6 @@
 Name:       dnf-plugin-protected-kmods
-Version:    0.9.2
-Release:    2%{?dist}
+Version:    0.9.3
+Release:    1%{?dist}
 Summary:    DNF plugin needed to protect kmods
 License:    Apache-2.0
 URL:        https://github.com/ctrliq/%{name}
@@ -8,7 +8,6 @@ Source0:    %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildArch:  noarch
 
 BuildRequires: python3-devel
-BuildRequires: pandoc
 
 
 %global _description %{expand:
@@ -33,23 +32,16 @@ Obsoletes:  %{name} < %{version}-%{release}
 %autosetup
 
 
-%build
-pandoc README.md -t plain -o README
-
-
 %install
 mkdir -p %{buildroot}%{_sysconfdir}/dnf/plugins/protected-kmods.d/
 install -D -m 644 src/protected_kmods.py %{buildroot}%{python3_sitelib}/dnf-plugins/protected_kmods.py
-mkdir -p %{buildroot}%{_docdir}/%{name}
-install -m 0644 README %{buildroot}%{_docdir}/%{name}/
 
 
 %files -n python3-%{name}
 %license LICENSE
-%{python3_sitelib}/dnf-plugins/protected_kmods.py
-%{python3_sitelib}/dnf-plugins/__pycache__/protected_kmods.cpython-*.pyc
+%pycached %{python3_sitelib}/dnf-plugins/protected_kmods.py
 %dir %{_sysconfdir}/dnf/plugins/protected-kmods.d/
-%doc %{_docdir}/%{name}/
+%doc README
 
 
 %changelog
