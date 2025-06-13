@@ -1,82 +1,49 @@
 Name:       dnf-plugin-protected-kmods
-Version:    0.9.2
+Version:    0.9.3
 Release:    1%{?dist}
 Summary:    DNF plugin needed to protect kmods
-License:    MIT
+License:    Apache-2.0
 URL:        https://github.com/ctrliq/%{name}
-Source0:    https://github.com/ctrliq/%{name}/releases/download/v%{version}/%{name}-%{version}.tar.gz
+Source0:    %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildArch:  noarch
 
 BuildRequires: python3-devel
-BuildRequires: pandoc
+
+
+%global _description %{expand:
+When using precompiled kernel modules, this DNF plugin prevents kernel changes
+if there is no matching precompiled kernel module package available.}
+
+%description %_description
+
+
+%package -n python3-%{name}
+Summary:    %{summary}
 
 Requires:   python3-dnf
+Provides:   %{name} = %{version}-%{release}
+Obsoletes:  %{name} < %{version}-%{release}
 
-Provides:   dnf-plugin-kmod-kernel = %{version}-%{release}
-Obsoletes:  dnf-plugin-kmod-kernel <= %{version}-%{release}
 
-
-%description
-When using precompiled kernel modules, this DNF plugin prevents kernel changes
-if there is no matching precompiled kernel module package available.
+%description -n python3-%{name} %_description
 
 
 %prep
 %autosetup
 
 
-%build
-pandoc README.md -t plain -o README
-
-
 %install
 mkdir -p %{buildroot}%{_sysconfdir}/dnf/plugins/protected-kmods.d/
 install -D -m 644 src/protected_kmods.py %{buildroot}%{python3_sitelib}/dnf-plugins/protected_kmods.py
-mkdir -p %{buildroot}%{_docdir}/dnf-plugin-protected-kmods
-install -m 0644 README %{buildroot}%{_docdir}/dnf-plugin-protected-kmods/
 
 
-%files
+%files -n python3-%{name}
 %license LICENSE
-%{python3_sitelib}/dnf-plugins/*
-%{_sysconfdir}/dnf/plugins/protected-kmods.d/
-%doc %{_docdir}/dnf-plugin-protected-kmods/
+%pycached %{python3_sitelib}/dnf-plugins/protected_kmods.py
+%dir %{_sysconfdir}/dnf/plugins/protected-kmods.d/
+%doc README
 
 
 %changelog
-* Fri Mar 07 2025 Jonathan Dieter <jdieter@ciq.com> - 0.9.2-1
-- Display a warning when an orphaned kmod is potentially blocking kernel
-  updates
-
-* Fri Mar 07 2025 Jonathan Dieter <jdieter@ciq.com> - 0.9.1-1
-- Fix bug with filtering that occasionally has false negatives
-
-* Fri Mar 07 2025 Jonathan Dieter <jdieter@ciq.com> - 0.9-1
-- Speed up filtering when there are a large number of kernels
-- Change default to enforce a kmod blocking kernel updates, even when the kmod
-  isn't in a repo
-
-* Mon Jan 13 2025 Jonathan Dieter <jdieter@ciq.com> - 0.8-1
-- Temporarily disable plugin when available package sack isn't populated
-
-* Fri Dec 13 2024 Jonathan Dieter <jdieter@ciq.com> - 0.7-1
-- Fix bug introduced in 0.6
-- Add documentation
-
-* Thu Dec 12 2024 Jonathan Dieter <jdieter@ciq.com> - 0.6-1
-- Ensure that available_modules are sorted by evr_key in reverse order
-- Exclude kernels if they're in a higher priority value repo
-- Exclude kmods without any matching kernels
-
-* Fri Nov 29 2024 Jonathan Dieter <jdieter@ciq.com> - 0.5-1
-- Fix output when no kmods are available
-
-* Wed Nov 27 2024 Jonathan Dieter <jdieter@ciq.com> - 0.4-1
-- Fix kmod sort order when reporting
-
-* Tue Nov 26 2024 Jonathan Dieter <jdieter@ciq.com> - 0.3-1
-- Rename to dnf-plugin-protected-kmods
-
-* Wed Nov 20 2024 Jonathan Dieter <jdieter@ciq.com> - 0.2-1
-- Initial release
-- Add and own config directory
+* Sat Jun 07 2025 Jonathan Dieter <jdieter@ciq.com> - 0.9.3-1
+- Initial release for EPEL
