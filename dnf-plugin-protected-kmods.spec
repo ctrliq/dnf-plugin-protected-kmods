@@ -45,5 +45,5 @@ install -D -m 644 src/protected_kmods.py %{buildroot}%{python3_sitelib}/dnf-plug
 
 
 %changelog
-* Sat Jun 07 2025 Jonathan Dieter <jdieter@ciq.com> - 0.9.2-2
+* Sat Jun 07 2025 Jonathan Dieter <jdieter@ciq.com> - 0.9.3-1
 - Initial release for EPEL
