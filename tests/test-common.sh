@@ -13,6 +13,11 @@ function mkrepo {
     popd
 }
 
+function rmrepo {
+    # Remove repository at $1
+    rm -rf /var/tmp/repos/"$1"
+}
+
 function mkdnfconfig {
     # Create repo file at $1
     cat << EOF > /etc/yum.repos.d/"$1".repo
@@ -22,6 +27,11 @@ baseurl=file:///var/tmp/repos/$1
 gpgcheck=0
 enabled=1
 EOF
+}
+
+function rmdnfconfig {
+    # Remove repo file at $1
+    rm -f /etc/yum.repos.d/"$1".repo
 }
 
 function snapshotpkgs {
