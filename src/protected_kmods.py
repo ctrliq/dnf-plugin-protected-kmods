@@ -97,18 +97,15 @@ class ProtectedKmodsPlugin(dnf.Plugin):
             return
 
         # check installed
-        installed_kernel = list(sack.query().installed().filter(name = "kernel-core"))
+        installed_kernels = list(sack.query().installed().filter(name = "kernel-core"))
 
         # container/chroot
-        if not installed_kernel:
+        if not installed_kernels:
             return
 
-        # The most recent installed kernel package
-        installed_kernels = sorted(installed_kernel, reverse = True, key = lambda p: evr_key(p, sack))
-        if len(installed_kernels) > 0:
-            installed_kernel  = installed_kernels[0]
+        installed_kernels = sorted(installed_kernels, reverse = True, key = lambda p: evr_key(p, sack))
 
-        available_kernels = sack.query().available().filter(name = "kernel-core")
+        available_kernels = list(sack.query().available().filter(name = "kernel-core"))
         dkms_kmod_modules = sack.query().available().filter(name__substr = "dkms")
 
         # Print debugging if running from CLI
@@ -189,6 +186,11 @@ class ProtectedKmodsPlugin(dnf.Plugin):
             all_modules = sorted(all_modules, reverse = True, key = lambda p: evr_key(p, sack))
             no_match_kmods = list(all_modules)
             for kernelpkg in available_kernels:
+                # Clear kernelpkg from installed_kernels if it is already installed so we don't
+                # process it twice
+                if kernelpkg in installed_kernels:
+                    installed_kernels.remove(kernelpkg)
+
                 ksack = sack.query().available().filterm(name = ["kernel-core", "kernel-modules", "kernel-modules-core", "kernel-modules-extra"], version = kernelpkg.version, release = kernelpkg.release)
                 match = False
                 for kmodpkg in all_modules:
@@ -212,7 +214,6 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                         if kmodpkg in no_match_kmods and kernelpkg not in excluded_priority_kernels:
                             no_match_kmods.remove(kmodpkg)
                         match = True
-                        break
                 if not match:
                     # Assemble a list of all packages that are built from the same kernel source rpm
                     all_rpms_of_kernel = sack.query().available().filter(release = kernelpkg.release)
@@ -232,6 +233,32 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                             string_all_rpms_of_kernel = '\n  '.join([str(elem) for elem in all_rpms_of_kernel])
                             print_cmd(is_cli, f'Excluded kernel packages during update ({str(kernelpkg.version)}-{str(kernelpkg.release)}):\n  {string_all_rpms_of_kernel}')
                             print_cmd(is_cli, '')
+
+            # Ensure we're not excluding kmods that work with the currently installed kernel, even
+            # if the kernel is no longer available in the repos
+            for kernelpkg in installed_kernels:
+                ksack = sack.query().installed().filterm(name = ["kernel-core", "kernel-modules", "kernel-modules-core", "kernel-modules-extra"], version = kernelpkg.version, release = kernelpkg.release)
+                match = False
+                for kmodpkg in all_modules:
+                    kmod_match = True
+                    for item in kmodpkg.requires:
+                        if not str(item).startswith("kernel"):
+                            continue
+                        if not ksack.filterm(provides=item):
+                            # Most of the time filterm works as expected, but occasionally it gives a false negative, so verify once more with a new sack and filter()
+                            # Worst case scenario, we do this a few times per kmod, but it's still significantly faster than using filter() each time
+                            ksack = sack.query().installed().filterm(name = ["kernel-core", "kernel-modules", "kernel-modules-core", "kernel-modules-extra"], version = kernelpkg.version, release = kernelpkg.release)
+                            if not ksack.filter(provides=item):
+                                kmod_match = False
+                                break
+                    if kmod_match:
+                        if is_cli:
+                            excluded = ""
+                            if kernelpkg in excluded_priority_kernels:
+                                excluded = " (excluded kernel)"
+                            print_cmd(is_cli, f'Found matching {kmodpkg} for installed {kernelpkg}{excluded}')
+                        if kmodpkg in no_match_kmods and kernelpkg not in excluded_priority_kernels:
+                            no_match_kmods.remove(kmodpkg)
 
             # There may be situations where we have kmods that don't have any matching kernel.  In
             # this case, we want to exclude them so users don't end up with "none of the providers
