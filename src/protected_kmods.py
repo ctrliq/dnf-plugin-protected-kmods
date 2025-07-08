@@ -1,3 +1,10 @@
+# dnf-plugin-protected-kmods
+#
+# DNF plugin to ensure that kernel updates do not occur if the update doesn't have
+# a matching kmod available in the repositories.
+#
+# Forked from https://github.com/NVIDIA/yum-packaging-nvidia-plugin
+
 import os
 from functools import cmp_to_key
 from configparser import ConfigParser, NoOptionError, NoSectionError

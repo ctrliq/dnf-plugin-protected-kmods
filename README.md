@@ -101,6 +101,18 @@ Excluded kernel packages during update (5.14.0-503.14.1.el9_5):
 Found matching kmod-idpf-irdma-0.0.129.20_0.0.647-3.el9.x86_64 for kernel-core-5.14.0-427.35.1.el9_4.cloud.1.0.x86_64
 ```
 
+## Building the plain-text documentation
+
+1. Install `pandoc`
+2. Run the following command in the root directory of the repository:
+   ```bash
+   pandoc README.md -t plain -o README
+   ```
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## History
+
+Forked from https://github.com/NVIDIA/yum-packaging-nvidia-plugin
