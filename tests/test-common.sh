@@ -60,11 +60,11 @@ function cleanup {
 }
 
 function installpkg {
-    dnf -y install "$1" 2>&1 | tee -a /var/log/dnf-output.log
+    dnf -y install "$@" 2>&1 | tee -a /var/log/dnf-output.log
 }
 
 function removepkg {
-    dnf -y remove "$1" 2>&1 | tee -a /var/log/dnf-output.log
+    dnf -y remove "$@" 2>&1 | tee -a /var/log/dnf-output.log
 }
 
 function testdnf {

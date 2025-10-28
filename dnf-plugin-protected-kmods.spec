@@ -1,5 +1,5 @@
 Name:       dnf-plugin-protected-kmods
-Version:    0.9.5
+Version:    1.0.0
 Release:    1%{?dist}
 Summary:    DNF plugin needed to protect kmods
 License:    Apache-2.0
@@ -45,5 +45,10 @@ install -D -m 644 src/protected_kmods.py %{buildroot}%{python3_sitelib}/dnf-plug
 
 
 %changelog
-* Mon Jul 08 2025 Jonathan Dieter <jdieter@ciq.com> - 0.9.5-1
+* Tue Oct 28 2025 Jonathan Dieter <jdieter@ciq.com> - 1.0.0-1
+- Add support for different kernel variants
+- Ensure matching kernels aren't excluded for installed kmods, even if the kmod is not available in the
+  enabled repositories
+
+* Tue Jul 08 2025 Jonathan Dieter <jdieter@ciq.com> - 0.9.5-1
 - Initial release for EPEL
