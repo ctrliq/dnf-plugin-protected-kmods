@@ -9,8 +9,12 @@ RUN cd /var/tmp
 RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kernel1/kernel.spec && dnf -y install $(uname -m)/kernel*.rpm && mkdir -p /var/tmp/kernel1 && mv $(uname -m)/kernel*.rpm /var/tmp/kernel1
 RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kernel2/kernel.spec && mkdir -p /var/tmp/kernel2 && mv $(uname -m)/kernel*.rpm /var/tmp/kernel2
 RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kernel3/kernel.spec && mkdir -p /var/tmp/kernel3 && mv $(uname -m)/kernel*.rpm /var/tmp/kernel3
+RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kernel-rt1/kernel.spec && mkdir -p /var/tmp/kernel-rt1 && mv $(uname -m)/kernel*.rpm /var/tmp/kernel-rt1
+RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kernel-rt2/kernel.spec && mkdir -p /var/tmp/kernel-rt2 && mv $(uname -m)/kernel*.rpm /var/tmp/kernel-rt2
 RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kmod-test1/kmod-test.spec && mkdir -p /var/tmp/kmod-test1 && mv $(uname -m)/kmod-test*.rpm /var/tmp/kmod-test1
 RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kmod-test2/kmod-test.spec && mkdir -p /var/tmp/kmod-test2 && mv $(uname -m)/kmod-test*.rpm /var/tmp/kmod-test2
+RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kmod-test-rt1/kmod-test.spec && mkdir -p /var/tmp/kmod-test-rt1 && mv $(uname -m)/kmod-test*.rpm /var/tmp/kmod-test-rt1
+RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kmod-test-rt2/kmod-test.spec && mkdir -p /var/tmp/kmod-test-rt2 && mv $(uname -m)/kmod-test*.rpm /var/tmp/kmod-test-rt2
 
 COPY tests /var/tmp/tests
 RUN chmod 0755 /var/tmp/tests/run_test.sh
