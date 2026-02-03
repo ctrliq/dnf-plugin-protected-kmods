@@ -176,7 +176,7 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                 for kernelpkg in available_kernels:
                     if kernelpkg.base.repos[kernelpkg.reponame].priority > lowest_priority:
                         # Assemble a list of all packages that are built from the same kernel source rpm
-                        all_rpms_of_kernel = list(sack.query().available().filter(release = kernelpkg.release))
+                        all_rpms_of_kernel = list(sack.query().available().filter(version = kernelpkg.version, release = kernelpkg.release))
                         excluded_priority_kernels.append(kernelpkg)
 
                         if not is_cli:
@@ -251,7 +251,7 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                             match = True
                     if not match:
                         # Assemble a list of all packages that are built from the same kernel source rpm
-                        all_rpms_of_kernel = sack.query().available().filter(release = kernelpkg.release)
+                        all_rpms_of_kernel = sack.query().available().filter(version = kernelpkg.version, release = kernelpkg.release)
 
                         print_cmd(is_cli, f'No matching {kmod_name} for {kernelpkg}')
                         if kernelpkg not in excluded_priority_kernels:
