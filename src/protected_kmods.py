@@ -108,7 +108,7 @@ class ProtectedKmodsPlugin(dnf.Plugin):
             return
 
         # Check for *any* installed kernels, if none are installed, then skip all processing (we're in a container/chroot)
-        any_installed_kernels = list(sack.query().installed().filter(name__glob = "kernel-core*"))
+        any_installed_kernels = list(sack.query().installed().filter(name__glob = "kernel*-core"))
         if not any_installed_kernels:
             print("No installed kernels found")
             return
