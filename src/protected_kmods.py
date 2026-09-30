@@ -6,6 +6,7 @@
 # Forked from https://github.com/NVIDIA/yum-packaging-nvidia-plugin
 
 import os
+import re
 from functools import cmp_to_key
 from configparser import ConfigParser, NoOptionError, NoSectionError
 
@@ -17,6 +18,18 @@ import dnf.sack
 import libdnf.transaction
 
 PLUGIN_CONF = 'protected-kmods'
+KERNEL_PACKAGE = re.compile(r'^kernel(-[^\s()]+)?$')
+KERNEL_SUBPACKAGE = re.compile(r'-(core|modules(-core|-extra)?)$')
+
+
+def kernel_families(po):
+    """Return the kernel families (e.g. "kernel-clk6.18") that po requires by package name."""
+    families = set()
+    for req in po.requires:
+        name = str(req).split(' ', 1)[0]
+        if KERNEL_PACKAGE.match(name):
+            families.add(KERNEL_SUBPACKAGE.sub('', name))
+    return families
 
 
 def evr_key(po, sack):
@@ -91,6 +104,34 @@ class ProtectedKmodsPlugin(dnf.Plugin):
             return default
 
 
+    def _kmods_by_kernel_family(self, sack):
+        """Map each kernel family to the protected kmods built for it.
+
+        The family comes from the kernel package that an installed kmod, or one of its
+        variant subpackages, requires. A config naming a meta package, or giving the
+        wrong variant, still reaches the right kernels. The configured variant is used
+        only when no installed package names a kernel family.
+        """
+        installed = sack.query().installed()
+        families = {}
+        for variant, kmod_names in self.protected_kmods.items():
+            configured = f"kernel-{variant}" if variant else "kernel"
+            for kmod_name in kmod_names:
+                derived = {}
+                candidates = list(installed.filter(name = kmod_name)) + list(installed.filter(name__glob = f"{kmod_name}-*"))
+                for po in candidates:
+                    po_families = kernel_families(po)
+                    if len(po_families) == 1:
+                        derived.setdefault(po_families.pop(), set()).add(po.name)
+                if not derived:
+                    derived = {configured: {kmod_name}}
+                elif configured not in derived:
+                    logger.warning(f'WARNING: {kmod_name}: config implies {configured}, but installed kmods require {", ".join(sorted(derived))}; using those')
+                for family, names in derived.items():
+                    families.setdefault(family, set()).update(names)
+        return {family: sorted(names) for family, names in families.items()}
+
+
     def sack(self):
         if len(self.protected_kmods) == 0:
             return
@@ -113,11 +154,8 @@ class ProtectedKmodsPlugin(dnf.Plugin):
             print("No installed kernels found")
             return
 
-        for variant in self.protected_kmods:
-            if variant is not None:
-                cvariant = f"-{variant}"
-            else:
-                cvariant = ""
+        for family, kmod_names in self._kmods_by_kernel_family(sack).items():
+            cvariant = family[len("kernel"):]
             # check installed
             installed_kernels = list(sack.query().installed().filter(name = f"kernel{cvariant}-core"))
             installed_kernels = sorted(installed_kernels, reverse = True, key = lambda p: evr_key(p, sack))
@@ -135,7 +173,7 @@ class ProtectedKmodsPlugin(dnf.Plugin):
                     string_kernels = '\n  '.join([str(elem) for elem in available_kernels])
                     print_cmd(is_cli, f'\nAvailable kernel(s):\n  {str(string_kernels)}')
 
-            for kmod_name in self.protected_kmods[variant]:
+            for kmod_name in kmod_names:
                 installed_modules = list(sack.query().installed().filter(name = kmod_name))
                 available_modules = list(sack.query().available().filter(name = kmod_name).difference(dkms_kmod_modules))
                 if len(available_modules) == 0:
