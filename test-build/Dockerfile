@@ -15,6 +15,7 @@ RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kmod-test1/kmod-t
 RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kmod-test2/kmod-test.spec && mkdir -p /var/tmp/kmod-test2 && mv $(uname -m)/kmod-test*.rpm /var/tmp/kmod-test2
 RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kmod-test-rt1/kmod-test.spec && mkdir -p /var/tmp/kmod-test-rt1 && mv $(uname -m)/kmod-test*.rpm /var/tmp/kmod-test-rt1
 RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kmod-test-rt2/kmod-test.spec && mkdir -p /var/tmp/kmod-test-rt2 && mv $(uname -m)/kmod-test*.rpm /var/tmp/kmod-test-rt2
+RUN rpmbuild -bb --define "_rpmdir $(pwd)" /var/tmp/test-build/kmod-test-rt-base1/kmod-test.spec && mkdir -p /var/tmp/kmod-test-rt-base1 && mv $(uname -m)/kmod-test*.rpm /var/tmp/kmod-test-rt-base1
 
 COPY tests /var/tmp/tests
 RUN chmod 0755 /var/tmp/tests/run_test.sh
