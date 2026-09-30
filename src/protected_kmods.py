@@ -77,6 +77,10 @@ class ProtectedKmodsPlugin(dnf.Plugin):
         elif type(kmod_names) != list:
             logger.warning(f'Invalid config in {config_file}: kmod_names should be a list or a string')
             return
+        # kmods name a variant's plain kernel "<variant>-base" (kmod-foo-clk6.18-base
+        # for kernel-clk6.18-core), but the kernel's own name has no "-base"
+        if variant is not None and variant.endswith("-base"):
+            variant = variant[:-len("-base")]
         if variant not in self.protected_kmods:
             self.protected_kmods[variant] = []
         self.protected_kmods[variant].extend(kmod_names)
