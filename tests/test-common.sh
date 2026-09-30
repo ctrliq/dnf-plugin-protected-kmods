@@ -57,6 +57,8 @@ function cleanup {
     rm -rf "$dnfloc" "$rpmloc"
     cp -a --reflink=auto /var/tmp/snapshot/dnf "$dnfloc"
     cp -a --reflink=auto /var/tmp/snapshot/rpm "$rpmloc"
+    # Restoring the rpmdb leaves the removed kmods' configs behind
+    rm -f /etc/dnf/plugins/protected-kmods.d/*.conf
 }
 
 function installpkg {
